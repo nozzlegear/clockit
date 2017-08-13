@@ -5,6 +5,7 @@ open R.Props
 open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
+open Fable.Import.Browser
 open System
 
 [<Pojo>]
@@ -16,11 +17,10 @@ type PreviousRecordProps = {
 [<Pojo>]
 type ClockProps = {
     currentLength: int;
-    punchedIn: bool;
 }
 
 [<Pojo>]
-type ClockState = {
+type AppState = {
     currentLength: int;
 }
 
@@ -34,20 +34,8 @@ let formatTimeString length =
 
     sprintf "%s:%s:%s" hours minutes seconds
 
-type Clock(props) =
-    inherit React.Component<ClockProps,ClockState>(props)
-    do 
-        let state = { currentLength = props.currentLength }
-        base.setInitState(state)
-
-    member this.componentDidMount (props, state) =
-        // TODO: Set a timer to update every 1 second 
-        ignore ()
-
-    member this.render () =
-        // Todo: state.currentLength is in seconds. Calculate hours, seconds and minutes.
-        
-        R.h1 [] [ R.str (formatTimeString this.state.currentLength) ]
+let Clock (props: ClockProps) = 
+    R.h1 [] [ R.str (formatTimeString props.currentLength)]
 
 type ToggleButton(props) =
     inherit React.Component<obj,obj>(props)
@@ -74,8 +62,21 @@ type PreviousRecord(props) =
         ]
 
 type App(props) =
-    inherit React.Component<obj,obj>(props)
-    do base.setInitState()
+    inherit React.Component<obj,AppState>(props)
+    do 
+        // TODO: Figure out the current length based on whether the user is punched in or not, and for how long.
+        let currentLength = 0;
+        base.setInitState({currentLength = currentLength})
+
+    member this.Tick () =
+        let state = { this.state with currentLength = this.state.currentLength + 1 }
+        
+        this.setState state
+
+    member this.componentDidMount (props, state) = 
+        let timer = window.setInterval (this.Tick, 1000)
+
+        ignore ()    
 
     member this.render() =
         let list = [
@@ -95,7 +96,7 @@ type App(props) =
                 R.p [] [R.str "Clockit"]
 
             ]
-            R.com<Clock,ClockProps,_> { currentLength = 71980; punchedIn = false } [ ]
+            R.fn Clock { currentLength = this.state.currentLength } []
             R.com<ToggleButton,_,_> [] []
             R.div [] componentList
         ] 
