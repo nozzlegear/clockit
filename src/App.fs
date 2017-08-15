@@ -12,7 +12,7 @@ open System
 [<Pojo>]
 type PreviousRecordProps = {
     // TODO: When stringified to JSON the datetime is converted to a string, but is never converted back to 
-    // DateTime when parsed from json.
+    // DateTime when parsed from json. Could probably circumvent this easily by making it a union time of DateTime or string. 
     startTime: DateTime
     endTime: DateTime option
 }
