@@ -1,5 +1,6 @@
 module Clockit
 module R = Fable.Helpers.React
+module FSOption = FSharp.Core.Option
 
 open R.Props
 open Fable.Core
@@ -10,6 +11,8 @@ open System
 
 [<Pojo>]
 type PreviousRecordProps = {
+    // TODO: When stringified to JSON the datetime is converted to a string, but is never converted back to 
+    // DateTime when parsed from json.
     startTime: DateTime
     endTime: DateTime option
 }
@@ -29,9 +32,12 @@ type ToggleButtonProps = {
 type AppState = {
     currentLength: int
     since: DateTime option
-    punchedIn: bool
     previousPunches: PreviousRecordProps list
 }
+
+let inline (/??) x y = if isNull x then y else x
+
+let inline (|?) (a: 'a option) b = if a.IsSome then a.Value else b
 
 let getDateDifference (difference: TimeSpan) = int <| Math.Ceiling difference.TotalSeconds
 
@@ -63,56 +69,52 @@ let PreviousRecord (props: PreviousRecordProps) =
         match props.endTime with
         | Some v -> v
         | None -> DateTime.Now
+        |> string
+        |> DateTime.Parse
+    let startTime = string props.startTime |> DateTime.Parse    
 
     R.div [ClassName "previous-record"] [
         R.div [ClassName "time"] [
-            R.str (endTime - props.startTime |> getDateDifference |> formatTimeString)
+            R.str (endTime - startTime |> getDateDifference |> formatTimeString)
         ]
         R.div [ClassName "date"] [
-            R.str (props.startTime.ToString ("D"))
+            R.str (startTime.ToString ("D"))
         ]
     ]
+
+[<PassGenerics>]
+let load<'T> key: 'T option = 
+    !!Browser.localStorage.getItem key
+    |> FSOption.map (fun json -> !!ofJson<'T> json)
+
+let save key value =
+    Browser.localStorage.setItem (key, toJson value)
+
+let remove key = 
+    Browser.localStorage.removeItem key
 
 type App(props) =
     inherit React.Component<obj,AppState>(props)
     do 
         // TODO: Figure out the current length based on whether the user is punched in or not, and for how long.
-        let lsValue = window.localStorage.getItem App.PunchedInSinceKey
-        let parsedValue = 
-            match lsValue with
-            | :? String as s ->
-                match box (ofJson s) with
-                | :? String as dateString ->
-                    printfn "String value was %s" dateString
-                    Some <| DateTime.Parse dateString
-                | :? int64 as timestamp ->
-                    Some <| DateTime timestamp                                
-                | _ -> 
-                    printfn "Could not parse localstorage value %A to DateTime" lsValue
-                    
-                    None                
-            | _ -> None
+        let lastPunch = 
+            match load<string> App.PunchedInSinceKey with
+            | Some s -> Some (DateTime.Parse s)
+            | None -> None
         let currentLength = 
-            match parsedValue with
-            | Some date -> 
-                DateTime.Now - date |> getDateDifference
+            match lastPunch with
+            | Some date -> DateTime.Now - date |> getDateDifference
             | None -> 0
-        let previousPunches = [
-            {
-                startTime = DateTime.Parse("2017-08-12T00:12:00.000Z")
-                endTime = Some (DateTime.Parse "2017-08-12T00:13:00.000Z")
-            }
-            {
-                startTime = DateTime.Parse("2017-08-11T00:12:00.000Z")
-                endTime = Some (DateTime.Parse "2017-08-11T00:14:00.000Z")
-            }
-        ]
 
-        base.setInitState({currentLength = currentLength; punchedIn = parsedValue.IsSome; since = parsedValue; previousPunches = previousPunches })
+        let previousPunches = load<PreviousRecordProps list> App.PreviousPunchesKey |? []
+
+        base.setInitState({currentLength = currentLength; since = lastPunch; previousPunches = previousPunches })
 
     let mutable timer: float option = None 
 
     static member PunchedInSinceKey = "clockit_punched_in_since"
+
+    static member PreviousPunchesKey = "clockit_previous_punches"
 
     member this.Tick () =
         match this.state.since with
@@ -121,14 +123,13 @@ type App(props) =
             // TODO: If the user has been punched in for longer than 12 hours, ask if that's correct.
             let state = { this.state with currentLength = DateTime.Now - date |> getDateDifference }
 
-        
             this.setState state
-        | None -> ignore ()        
+        | None -> ()        
 
     member this.ClearTimer () = 
         match timer with
         | Some t -> window.clearInterval t
-        | None -> ignore ()
+        | None -> ()
 
         timer <- None
 
@@ -138,56 +139,56 @@ type App(props) =
         timer <- Some <| window.setInterval (this.Tick, 1000)
             
     member this.TogglePunch () =
-        let status = not this.state.punchedIn 
+        let newStatus = not this.state.since.IsSome 
         let length = this.state.currentLength
 
         this.ClearTimer ()
 
-        let since = 
-            match status with 
-            | true -> 
-                let value = DateTime.Now
+        let newState = { this.state with currentLength = 0 }
 
-                window.localStorage.setItem (App.PunchedInSinceKey, toJson value)
+        if newStatus then
+            let since = DateTime.Now
 
-                Some value
-            | false -> 
-                // User has punched out, save their current length and remove the punched in localstorage item
-                window.localStorage.setItem ("item", toJson [this.state])
-                window.localStorage.removeItem App.PunchedInSinceKey
-                
-                None
+            save App.PunchedInSinceKey since
 
-        let state = { this.state with punchedIn = status; currentLength = 0; since = since  }
-        
-        this.setState state
+            this.setState { newState with since = Some since }
+            this.StartTimer ()
+        else
+            let lastPunchAt = 
+                match this.state.since with
+                | Some s -> s
+                | None -> DateTime.Now.AddHours -8.
+            
+            // User has punched out, save their current length and remove the punched in localstorage item
+            let punches = 
+                match load<PreviousRecordProps list> App.PreviousPunchesKey with
+                | Some s -> s
+                | None -> []
+                @ [{startTime = lastPunchAt; endTime = Some DateTime.Now}]                
 
-        match since with
-        | Some v -> this.StartTimer ()
-        | None -> ignore ()
+            save App.PreviousPunchesKey punches
+            remove App.PunchedInSinceKey
 
+            this.setState { newState with since = None; previousPunches = punches }
+ 
     member this.componentDidMount (props, state) = 
-        match this.state.punchedIn with
-        | true -> this.StartTimer ()
-        | false -> ignore ()         
-
+        if this.state.since.IsSome then this.StartTimer()
+        
     member this.render() =
-        let previousHours = 
-            this.state.previousPunches
-            |> Seq.map(fun item -> 
-                R.fn PreviousRecord item []       
-            ) 
-            |> Seq.toList
 
         R.main [ Id "main" ] [
             R.h2 [] [R.str "Clockit"]
             (
-                match this.state.punchedIn with
+                match this.state.since.IsSome with
                 | true -> R.fn Clock { currentLength = this.state.currentLength } []
                 | false -> R.h1 [] [R.str "You are not punched in."]
             )
-            R.fn ToggleButton { punchedIn = this.state.punchedIn; onClick = (fun e -> this.TogglePunch () ) } []
-            R.div [] previousHours
+            R.fn ToggleButton { punchedIn = this.state.since.IsSome; onClick = (fun e -> this.TogglePunch () ) } []
+            R.div [] (
+                this.state.previousPunches
+                |> Seq.map(fun item -> R.fn PreviousRecord item [])
+                |> Seq.toList
+            )    
         ]
 
 let init() =
