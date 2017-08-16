@@ -9,12 +9,15 @@ open Fable.Import
 open Fable.Import.Browser
 open System
 
+type StartTimeType = StartDate of DateTime | StartDateString of string
+type EndTimeType = EndDate of DateTime option | EndDateString of string option
+
 [<Pojo>]
 type PreviousRecordProps = {
     // TODO: When stringified to JSON the datetime is converted to a string, but is never converted back to 
     // DateTime when parsed from json. Could probably circumvent this easily by making it a union time of DateTime or string. 
-    startTime: DateTime
-    endTime: DateTime option
+    startTime: StartTimeType
+    endTime: EndTimeType
 }
 
 [<Pojo>]
@@ -67,11 +70,18 @@ let ToggleButton (props: ToggleButtonProps) =
 let PreviousRecord (props: PreviousRecordProps) =
     let endTime = 
         match props.endTime with
-        | Some v -> v
-        | None -> DateTime.Now
-        |> string
-        |> DateTime.Parse
-    let startTime = string props.startTime |> DateTime.Parse    
+        | EndDateString s -> 
+            match s with 
+            | Some s -> DateTime.Parse s
+            | None -> DateTime.Now
+        | EndDate d ->
+            match d with
+            | Some d -> d
+            | None -> DateTime.Now
+    let startTime = 
+        match props.startTime with
+        | StartDateString s -> DateTime.Parse s
+        | StartDate d -> d
 
     R.div [ClassName "previous-record"] [
         R.div [ClassName "time"] [
@@ -164,7 +174,7 @@ type App(props) =
                 match load<PreviousRecordProps list> App.PreviousPunchesKey with
                 | Some s -> s
                 | None -> []
-                @ [{startTime = lastPunchAt; endTime = Some DateTime.Now}]                
+                @ [{startTime = StartDate lastPunchAt; endTime = EndDate <| Some DateTime.Now}]                
 
             save App.PreviousPunchesKey punches
             remove App.PunchedInSinceKey
