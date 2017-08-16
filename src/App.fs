@@ -9,15 +9,15 @@ open Fable.Import
 open Fable.Import.Browser
 open System
 
-type StartTimeType = StartDate of DateTime | StartDateString of string
-type EndTimeType = EndDate of DateTime option | EndDateString of string option
+type PreviousPunch = {
+    startTime: DateTime
+    endTime: DateTime
+}
 
 [<Pojo>]
 type PreviousRecordProps = {
-    // TODO: When stringified to JSON the datetime is converted to a string, but is never converted back to 
-    // DateTime when parsed from json. Could probably circumvent this easily by making it a union time of DateTime or string. 
-    startTime: StartTimeType
-    endTime: EndTimeType
+    startTime: DateTime
+    endTime: DateTime option
 }
 
 [<Pojo>]
@@ -35,7 +35,7 @@ type ToggleButtonProps = {
 type AppState = {
     currentLength: int
     since: DateTime option
-    previousPunches: PreviousRecordProps list
+    previousPunches: PreviousPunch list
 }
 
 let inline (/??) x y = if isNull x then y else x
@@ -70,25 +70,15 @@ let ToggleButton (props: ToggleButtonProps) =
 let PreviousRecord (props: PreviousRecordProps) =
     let endTime = 
         match props.endTime with
-        | EndDateString s -> 
-            match s with 
-            | Some s -> DateTime.Parse s
-            | None -> DateTime.Now
-        | EndDate d ->
-            match d with
-            | Some d -> d
-            | None -> DateTime.Now
-    let startTime = 
-        match props.startTime with
-        | StartDateString s -> DateTime.Parse s
-        | StartDate d -> d
+        | Some d -> d
+        | None -> DateTime.Now
 
     R.div [ClassName "previous-record"] [
         R.div [ClassName "time"] [
-            R.str (endTime - startTime |> getDateDifference |> formatTimeString)
+            R.str (endTime - props.startTime |> getDateDifference |> formatTimeString)
         ]
         R.div [ClassName "date"] [
-            R.str (startTime.ToString ("D"))
+            R.str (props.startTime.ToString ("D"))
         ]
     ]
 
@@ -115,8 +105,7 @@ type App(props) =
             match lastPunch with
             | Some date -> DateTime.Now - date |> getDateDifference
             | None -> 0
-
-        let previousPunches = load<PreviousRecordProps list> App.PreviousPunchesKey |? []
+        let previousPunches = load<PreviousPunch list> App.PreviousPunchesKey |? []
 
         base.setInitState({currentLength = currentLength; since = lastPunch; previousPunches = previousPunches })
 
@@ -171,10 +160,8 @@ type App(props) =
             
             // User has punched out, save their current length and remove the punched in localstorage item
             let punches = 
-                match load<PreviousRecordProps list> App.PreviousPunchesKey with
-                | Some s -> s
-                | None -> []
-                @ [{startTime = StartDate lastPunchAt; endTime = EndDate <| Some DateTime.Now}]                
+                this.state.previousPunches
+                @ [{startTime = lastPunchAt; endTime = DateTime.Now}]                
 
             save App.PreviousPunchesKey punches
             remove App.PunchedInSinceKey
@@ -196,7 +183,14 @@ type App(props) =
             R.fn ToggleButton { punchedIn = this.state.since.IsSome; onClick = (fun e -> this.TogglePunch () ) } []
             R.div [] (
                 this.state.previousPunches
-                |> Seq.map(fun item -> R.fn PreviousRecord item [])
+                |> Seq.map(fun item -> { startTime = item.startTime; endTime = Some item.endTime })
+                |> Seq.append (
+                    match this.state.since with
+                    | Some since -> [{ startTime = since; endTime = None }]
+                    | None -> [])
+                |> Seq.sortBy(fun props -> props.startTime)
+                |> Seq.rev                
+                |> Seq.map(fun props -> R.fn PreviousRecord props [])                
                 |> Seq.toList
             )    
         ]
