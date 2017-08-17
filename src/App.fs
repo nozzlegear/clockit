@@ -14,6 +14,11 @@ type PreviousPunch = {
     endTime: DateTime
 }
 
+type PreviousWeek = {
+    label: string
+    punches: PreviousPunch list
+}
+
 [<Pojo>]
 type PreviousRecordProps = {
     startTime: DateTime
@@ -31,11 +36,13 @@ type ToggleButtonProps = {
     onClick: React.MouseEvent -> unit
 }
 
-[<Pojo>] 
+[<Pojo>]
 type AppState = {
     currentLength: int
     since: DateTime option
-    previousPunches: PreviousPunch list
+    currentPeriodPunches: PreviousPunch list
+    previousWeeks: PreviousWeek list
+    loading: bool
 }
 
 let inline (/??) x y = if isNull x then y else x
@@ -54,11 +61,11 @@ let formatTimeString length =
 
     sprintf "%s:%s:%s" hours minutes seconds
 
-let Clock (props: ClockProps) = 
+let Clock (props: ClockProps) =
     R.h1 [] [ R.str (formatTimeString props.currentLength)]
 
-let ToggleButton (props: ToggleButtonProps) = 
-    let text = 
+let ToggleButton (props: ToggleButtonProps) =
+    let text =
         match props.punchedIn with
         | true ->
             "Punch Out"
@@ -68,7 +75,7 @@ let ToggleButton (props: ToggleButtonProps) =
     R.button [Id "toggle-button"; OnClick props.onClick ] [R.str text]
 
 let PreviousRecord (props: PreviousRecordProps) =
-    let endTime = 
+    let endTime =
         match props.endTime with
         | Some d -> d
         | None -> DateTime.Now
@@ -83,62 +90,79 @@ let PreviousRecord (props: PreviousRecordProps) =
     ]
 
 [<PassGenerics>]
-let load<'T> key: 'T option = 
+let load<'T> key: 'T option =
     !!Browser.localStorage.getItem key
     |> FSOption.map (fun json -> !!ofJson<'T> json)
 
 let save key value =
     Browser.localStorage.setItem (key, toJson value)
 
-let remove key = 
+let remove key =
     Browser.localStorage.removeItem key
 
 type App(props) =
     inherit React.Component<obj,AppState>(props)
-    do 
+    do
         // TODO: Figure out the current length based on whether the user is punched in or not, and for how long.
-        let lastPunch = 
+        let lastPunch =
             match load<string> App.PunchedInSinceKey with
             | Some s -> Some (DateTime.Parse s)
             | None -> None
-        let currentLength = 
+        let currentLength =
             match lastPunch with
             | Some date -> DateTime.Now - date |> getDateDifference
             | None -> 0
-        let previousPunches = load<PreviousPunch list> App.PreviousPunchesKey |? []
 
-        base.setInitState({currentLength = currentLength; since = lastPunch; previousPunches = previousPunches })
+        base.setInitState
+            {
+                loading = true
+                currentLength = currentLength
+                since = lastPunch
+                currentPeriodPunches = []
+                previousWeeks = []
+            }
 
-    let mutable timer: float option = None 
+    let mutable timer: float option = None
 
     static member PunchedInSinceKey = "clockit_punched_in_since"
 
     static member PreviousPunchesKey = "clockit_previous_punches"
 
+    member this.CalculateTotalTime (since: DateTime option) (previousPunches: PreviousPunch list) =
+        let totalPreviousTime =
+            previousPunches
+            |> Seq.sumBy (fun punch -> getDateDifference <| punch.endTime - punch.startTime)
+        let currentTime =
+            match this.state.since with
+            | Some s -> getDateDifference <| DateTime.Now - s
+            | None -> 0
+
+        totalPreviousTime + currentTime
+
     member this.Tick () =
         match this.state.since with
         | Some date ->
-            // TODO: CurrentLength should add up all previous punchs + current punch.
             // TODO: If the user has been punched in for longer than 12 hours, ask if that's correct.
-            let state = { this.state with currentLength = DateTime.Now - date |> getDateDifference }
+            let total = this.CalculateTotalTime this.state.since this.state.currentPeriodPunches
+            let state = { this.state with currentLength = total }
 
             this.setState state
-        | None -> ()        
+        | None -> ()
 
-    member this.ClearTimer () = 
+    member this.ClearTimer () =
         match timer with
         | Some t -> window.clearInterval t
         | None -> ()
 
         timer <- None
 
-    member this.StartTimer () = 
+    member this.StartTimer () =
         this.ClearTimer ()
 
         timer <- Some <| window.setInterval (this.Tick, 1000)
-            
+
     member this.TogglePunch () =
-        let newStatus = not this.state.since.IsSome 
+        let newStatus = not this.state.since.IsSome
         let length = this.state.currentLength
 
         this.ClearTimer ()
@@ -152,25 +176,65 @@ type App(props) =
 
             this.setState { newState with since = Some since }
             this.StartTimer ()
+
+            // TODO: Post new punch to the server
         else
-            let lastPunchAt = 
+            let lastPunchAt =
                 match this.state.since with
                 | Some s -> s
                 | None -> DateTime.Now.AddHours -8.
-            
+
             // User has punched out, save their current length and remove the punched in localstorage item
-            let punches = 
-                this.state.previousPunches
-                @ [{startTime = lastPunchAt; endTime = DateTime.Now}]                
+            let punches =
+                this.state.currentPeriodPunches
+                @ [{startTime = lastPunchAt; endTime = DateTime.Now}]
 
             save App.PreviousPunchesKey punches
             remove App.PunchedInSinceKey
 
-            this.setState { newState with since = None; previousPunches = punches }
- 
-    member this.componentDidMount (props, state) = 
+            this.setState { newState with since = None; currentPeriodPunches = punches }
+
+            // TODO: Post punch out to the server
+
+    member this.componentDidMount (props, state) =
         if this.state.since.IsSome then this.StartTimer()
-        
+
+        window.setTimeout ((fun _ ->
+            // TODO: Load punches from server
+            let previousPunches = load<PreviousPunch list> App.PreviousPunchesKey |? []
+            let previousWeeks = [
+                {
+                    label = "Week of August 13th"
+                    punches =
+                    [
+                        {
+                            startTime = DateTime.Parse("2017-08-14 12:00:00")
+                            endTime = DateTime.Parse("2017-08-14 15:05:00")
+                        }
+                    ]
+                }
+                {
+                    label = "Week of August 6th"
+                    punches =
+                    [
+                        {
+                            startTime = DateTime.Parse("2017-08-06 12:00:00")
+                            endTime = DateTime.Parse("2017-08-06 22:00:00")
+                        }
+                    ]
+                }
+            ]
+            let currentTime = this.CalculateTotalTime this.state.since previousPunches
+
+            this.setState {
+                this.state with
+                    currentPeriodPunches = previousPunches
+                    previousWeeks = previousWeeks
+                    currentLength = currentTime
+                    loading = false
+            }
+        ), 1000)
+
     member this.render() =
 
         R.main [ Id "main" ] [
@@ -181,28 +245,53 @@ type App(props) =
                 | false -> R.h1 [] [R.str "You are not punched in."]
             )
             R.fn ToggleButton { punchedIn = this.state.since.IsSome; onClick = (fun e -> this.TogglePunch () ) } []
+            (
+                match this.state.loading with
+                | true ->
+                    R.div [Id "loading-message"] [
+                        R.progress [] []
+                        R.p [] [
+                            R.str "Loading previous hours, please wait."
+                        ]
+                    ]
+                | false ->
+                    R.div [] (
+                        this.state.currentPeriodPunches
+                        |> Seq.map(fun item -> { startTime = item.startTime; endTime = Some item.endTime })
+                        |> Seq.append (
+                            match this.state.since with
+                            | Some since -> [{ startTime = since; endTime = None }]
+                            | None -> [])
+                        |> Seq.sortBy(fun props -> props.startTime)
+                        |> Seq.rev
+                        |> Seq.map(fun props -> R.fn PreviousRecord props [])
+                        |> Seq.toList
+                    )
+            )
+            R.h2 [] [R.str "Previous Weeks"]
+            R.p [] [R.str "Previous five weeks go here."]
             R.div [] (
-                this.state.previousPunches
-                |> Seq.map(fun item -> { startTime = item.startTime; endTime = Some item.endTime })
-                |> Seq.append (
-                    match this.state.since with
-                    | Some since -> [{ startTime = since; endTime = None }]
-                    | None -> [])
-                |> Seq.sortBy(fun props -> props.startTime)
-                |> Seq.rev                
-                |> Seq.map(fun props -> R.fn PreviousRecord props [])                
+                this.state.previousWeeks
+                |> Seq.map(fun week ->
+                    R.div [Key week.label; ClassName "previous-week"] [
+                        R.div [ClassName "label"] [ R.str week.label ]
+                        R.div [ClassName "length"] [ R.str (week.punches |> Seq.sumBy (fun punch -> punch.endTime - punch.startTime |> getDateDifference) |> formatTimeString) ]
+                    ])
                 |> Seq.toList
-            )    
+            )
+            R.p [] [
+                R.a [Href "/more"] [R.str "More"]
+            ]
         ]
 
 let init() =
     let container = Browser.document.getElementById "content-host"
-    let render() = 
+    let render() =
         ReactDom.render(
             R.com<App,_,_> [] [],
             container
         )
 
-    render()    
+    render()
 
 init()
