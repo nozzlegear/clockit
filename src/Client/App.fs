@@ -11,6 +11,7 @@ open System
 
 type PreviousPunch = {
     startTime: DateTime
+
     endTime: DateTime
 }
 

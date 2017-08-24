@@ -6,3 +6,6 @@ nuget FSharp.Core
 nuget Fable.Core
 nuget Fable.Import.Browser
 nuget fable.react
+nuget FAKE
+nuget suave
+nuget davenport

@@ -15,7 +15,7 @@ console.log("Bundling for " + (isProduction ? "production" : "development") + ".
 
 module.exports = {
   devtool: "source-map",
-  entry: resolve('./src/clockit.fsproj'),
+  entry: resolve('./src/Client/clockit.fsproj'),
   output: {
     filename: 'bundle.js',
     path: resolve('./public'),
