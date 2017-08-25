@@ -8,17 +8,7 @@ open Fable.Core.JsInterop
 open Fable.Import
 open Fable.Import.Browser
 open System
-
-type PreviousPunch = {
-    startTime: DateTime
-
-    endTime: DateTime
-}
-
-type PreviousWeek = {
-    label: string
-    punches: PreviousPunch list
-}
+open Clockit.Domain
 
 [<Pojo>]
 type PreviousRecordProps = {
@@ -41,8 +31,8 @@ type ToggleButtonProps = {
 type AppState = {
     currentLength: int
     since: DateTime option
-    currentPeriodPunches: PreviousPunch list
-    previousWeeks: PreviousWeek list
+    currentPeriodPunches: Punch list
+    previousWeeks: Week list
     loading: bool
 }
 
@@ -129,7 +119,7 @@ type App(props) =
 
     static member PreviousPunchesKey = "clockit_previous_punches"
 
-    member this.CalculateTotalTime (since: DateTime option) (previousPunches: PreviousPunch list) =
+    member this.CalculateTotalTime (since: DateTime option) (previousPunches: Punch list) =
         let totalPreviousTime =
             previousPunches
             |> Seq.sumBy (fun punch -> getDateDifference <| punch.endTime - punch.startTime)
@@ -202,7 +192,7 @@ type App(props) =
 
         window.setTimeout ((fun _ ->
             // TODO: Load punches from server
-            let previousPunches = load<PreviousPunch list> App.PreviousPunchesKey |? []
+            let previousPunches = load<Punch list> App.PreviousPunchesKey |? []
             let previousWeeks = [
                 {
                     label = "Week of August 13th"
