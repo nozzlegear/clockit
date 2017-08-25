@@ -1,6 +1,6 @@
 import * as Cache from 'gearworks-cache';
 import * as Constants from './modules/constants';
-import * as Databases from './modules/database';
+import * as Databases from './database';
 import * as express from 'express';
 import * as http from 'http';
 import * as httpsRedirect from 'redirect-https';
@@ -8,12 +8,12 @@ import * as os from 'os';
 import * as path from 'path';
 import * as routeConfigurations from './routes';
 import getRouter from 'gearworks-route/bin';
-import inspect from './modules/inspect';
+import inspect from 'logspect';
 import { BoomError, notFound, wrap } from 'boom';
 import { configureDatabase, DatabaseConfiguration } from 'davenport/bin';
 import { importToArray } from 'import-to-array';
 import { ISLIVE } from './modules/constants';
-import { User } from 'kmmp';
+import { User } from 'app';
 
 // This is injected by Webpack during the build process. Unfortnately necessary because
 // Zeit's pkg tool has a bug that makes it impossible to call .toString() on a function and
@@ -75,7 +75,6 @@ async function startServer(hostname: string, port: number) {
     await Promise.all(Object.keys(_DB_CONFIGURATIONS)
         .filter(prop => prop !== "__esModule")
         .map(prop => configureDatabase(Constants.COUCHDB_URL, _DB_CONFIGURATIONS[prop], { warnings: false })));
-    await Databases.Orders.ConfigureDisplayIdDoc();
     await Promise.all(importToArray(routeConfigurations).map(r => r(app, router)));
 
     // Wildcard route must be registered after all other routes.
