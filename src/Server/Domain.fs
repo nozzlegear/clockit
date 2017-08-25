@@ -1,13 +1,14 @@
 namespace Clockit.Domain
 
 open System
+open Davenport
 
-type Punch = {
-    startTime: DateTime
-    endTime: DateTime
-}
+type Punch (startTime, endTime) =
+    inherit Davenport.Entities.CouchDoc()
+    member x.StartTime: DateTime = startTime
+    member x.EndTime: DateTime option = endTime
 
 type Week = {
-    label: string
-    punches: Punch list
+    Label: string
+    Punches: Punch list
 }
