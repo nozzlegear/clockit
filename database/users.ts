@@ -1,7 +1,7 @@
 import * as Constants from '../modules/constants';
 import * as Davenport from 'davenport';
 import inspect from 'logspect';
-import { DisplayIdDesignDoc, User } from 'app';
+import { User } from 'app';
 
 declare const emit;
 
