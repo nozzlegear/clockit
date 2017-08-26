@@ -5,10 +5,10 @@
         "jsx": "react",
         "forceConsistentCasingInFileNames": true,
         "experimentalDecorators": true,
-        "noImplicitAny": false,
         "sourceMap": true,
         "outDir": "bin",
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "strictNullChecks": true
     },
     "exclude": [
         "node_modules"

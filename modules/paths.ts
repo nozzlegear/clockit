@@ -5,7 +5,8 @@ export const Paths = {
     },
     auth: {
         login: "/auth/login",
-        logout: "/auth/logout"
+        logout: "/auth/logout",
+        register: "/auth/register"
     }
 }
 

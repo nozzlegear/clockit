@@ -54,7 +54,7 @@ async function startServer(hostname: string, port: number) {
         userAuthIsValid: async user => {
             // If user id exists in invalidation cache, return a 401 unauthed response.
             try {
-                const cacheValue = await Cache.getValue(Constants.CACHE_SEGMENT_AUTH, user._id);
+                const cacheValue = await Cache.getValue(Constants.CACHE_SEGMENT_AUTH, user._id as string);
 
                 if (!!cacheValue) {
                     return false;

@@ -15,3 +15,10 @@ declare module "app" {
         punches: Punch[]
     }
 }
+
+declare module "requests/auth" {
+    export interface LoginOrRegister {
+        username: string
+        password: string
+    }
+}

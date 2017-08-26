@@ -13,7 +13,7 @@ export const APP_NAME = "Clockit";
 
 export const SNAKED_APP_NAME = "clockit";
 
-function get(baseKey: string, defaultValue = undefined) {
+function get(baseKey: string, defaultValue: string | undefined = undefined) {
     const snakedAppName = SNAKED_APP_NAME.toUpperCase();
     const key = baseKey.toUpperCase();
 

@@ -55,6 +55,10 @@
   version "6.0.51"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-6.0.51.tgz#84cbf25111516ec9304d0b61469dc0fa9d12ba32"
 
+"@types/qs@^6.5.0":
+  version "6.5.0"
+  resolved "https://registry.yarnpkg.com/@types/qs/-/qs-6.5.0.tgz#14514e8ee24a4d0672c0c0da5e01a4f11da60d71"
+
 "@types/react-dom@0.14.19":
   version "0.14.19"
   resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-0.14.19.tgz#698a14335e32fb1bc61db65f5647c9668a7fc2eb"
@@ -3018,7 +3022,7 @@ qs@6.4.0, qs@~6.4.0:
   version "6.4.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.4.0.tgz#13e26d28ad6b0ffaa91312cd3bf708ed351e7233"
 
-qs@6.5.0:
+qs@6.5.0, qs@^6.5.0:
   version "6.5.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.0.tgz#8d04954d364def3efc55b5a0793e1e2c8b1e6e49"
 

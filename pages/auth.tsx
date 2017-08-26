@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as Stores from '../stores';
 import { Label, PrimaryButton, TextField } from 'office-ui-fabric-react';
 import { Link } from 'react-router';
+import { Paths } from '../modules/paths';
 
 export interface AuthPageState {
     loading: boolean
@@ -17,11 +18,11 @@ export class AuthPage extends React.Component<any, Partial<AuthPageState>> {
             <section id="login">
                 <h2>{`Sign in`}</h2>
                 <TextField label="Username" />
-                <TextField label="Password" {...{ type: "password" }} />
+                <TextField label="Password" type="password" />
                 <PrimaryButton onClick={() => alert("test")} text="Sign in" />
                 <Label>
                     {`Don't have an account? `}
-                    <Link to={`#`}>
+                    <Link to={Paths.auth.register}>
                         {`Create one!`}
                     </Link>
                 </Label>

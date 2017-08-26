@@ -23,8 +23,12 @@ const isWatching = process.argv.indexOf("--watch") > -1;
 /**
  * Takes a list of plugins and only returns those that are not undefined. Useful when you only pass plugins in certain conditions.
  */
-function filterPlugins(plugins: webpack.Plugin[]) {
-    return (plugins || []).filter(plugin => !!plugin);
+function filterPlugins(plugins: (webpack.Plugin | undefined)[]) {
+    if (!plugins) {
+        return []
+    }
+
+    return plugins.filter(plugin => !!plugin) as webpack.Plugin[];
 }
 
 const baseConfig: webpack.Configuration = {
@@ -77,7 +81,7 @@ const clientConfig: webpack.Configuration = {
         path: path.join(__dirname, "dist")
     },
     plugins: filterPlugins([
-        ...baseConfig.plugins,
+        ...baseConfig.plugins as webpack.Plugin[],
         production ? undefined : new webpack.HotModuleReplacementPlugin(),
         new webpack.DefinePlugin({
             "process.env": {
@@ -104,7 +108,7 @@ const serverConfig: webpack.Configuration = {
     // Turn off the Node polyfill plugin, which polyfills things like __dirname to "/" instead of the real __dirname.
     node: false as any,
     plugins: filterPlugins([
-        ...baseConfig.plugins,
+        ...baseConfig.plugins as webpack.Plugin[],
         isWatching ? new StartServerPlugin({
             name: 'server.js',
             nodeArgs: [/* '--inspect' */], // This plugin has suddenly stopped working when passing --inspect. Need to investigate. 
@@ -117,37 +121,12 @@ const serverConfig: webpack.Configuration = {
         } as webpack.BannerPlugin.Options),
         new webpack.DefinePlugin({
             _DB_CONFIGURATIONS: JSON.stringify(importToArray(databases).map(db => db.Config))
-        }),
-        {
-            apply: (compiler) => {
-                let doneHandlerSet = false;
-                let counter = 0;
-
-                compiler.plugin("watch-run", (watcher, callback) => {
-                    inspect("Watch handler called");
-
-                    if (!doneHandlerSet) {
-                        inspect("Setting done handler")
-
-                        doneHandlerSet = true;
-
-                        compiler.plugin("done", (compilation) => {
-                            inspect("Compiler's done handler was called", counter);
-
-                            counter++;
-                        })
-                    }
-
-                    return callback();
-                })
-
-            }
-        }
+        })
     ]),
     externals: {
         ...baseConfig.externals as any,
         // Set all node_modules to external to prevent bundling them unnecessarily
-        ...fs.readdirSync('node_modules').filter(x => [".bin"].indexOf(x) === -1).reduce((output, mod) => {
+        ...fs.readdirSync('node_modules').filter((x: string) => [".bin"].indexOf(x) === -1).reduce<any>((output, mod) => {
             output[mod] = 'commonjs ' + mod;
 
             return output
