@@ -1,4 +1,4 @@
-import * as databases from './modules/database';
+import * as databases from './database';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readPkg from 'read-pkg';
@@ -60,6 +60,9 @@ const baseConfig: webpack.Configuration = {
             "NODE_ENV": `"${process.env.NODE_ENV}"` || `"development"`
         })
     ]),
+    externals: {
+
+    }
 }
 
 const clientConfig: webpack.Configuration = {
@@ -105,7 +108,7 @@ const serverConfig: webpack.Configuration = {
         isWatching ? new StartServerPlugin({
             name: 'server.js',
             nodeArgs: [/* '--inspect' */], // This plugin has suddenly stopped working when passing --inspect. Need to investigate. 
-            args: [], // pass args to script 
+            args: [], // pass args to script
         }) : undefined,
         new webpack.BannerPlugin({
             banner: "require('source-map-support').install();",
@@ -142,7 +145,7 @@ const serverConfig: webpack.Configuration = {
         }
     ]),
     externals: {
-        ...baseConfig.externals,
+        ...baseConfig.externals as any,
         // Set all node_modules to external to prevent bundling them unnecessarily
         ...fs.readdirSync('node_modules').filter(x => [".bin"].indexOf(x) === -1).reduce((output, mod) => {
             output[mod] = 'commonjs ' + mod;
