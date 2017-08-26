@@ -13,8 +13,10 @@ export class HomePage extends React.Component<any, Partial<HomePageState>> {
     public render() {
         return (
             <section id="home">
-
+                {`This is the home page. Punches will show here.`}
             </section>
         )
     }
 }
+
+export default HomePage

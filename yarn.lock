@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@microsoft/load-themed-styles@^1.5.1":
+"@microsoft/load-themed-styles@^1.2.2", "@microsoft/load-themed-styles@^1.5.1":
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/@microsoft/load-themed-styles/-/load-themed-styles-1.7.2.tgz#1efe32bbc711299065ed1318120e68945f4b6741"
 
@@ -98,19 +98,19 @@
     "@types/tapable" "*"
     "@types/uglify-js" "*"
 
-"@uifabric/styling@>=0.20.1 <1.0.0":
-  version "0.20.1"
-  resolved "https://registry.yarnpkg.com/@uifabric/styling/-/styling-0.20.1.tgz#3d9ade399a751e10308ac1874544b5dbc8b92496"
+"@uifabric/styling@>=0.13.9 <1.0.0":
+  version "0.20.2"
+  resolved "https://registry.yarnpkg.com/@uifabric/styling/-/styling-0.20.2.tgz#df8409886551f2a09aa9aa9a8c9b4f85f39691f6"
   dependencies:
     "@microsoft/load-themed-styles" "^1.5.1"
-    "@uifabric/utilities" ">=4.9.1 <5.0.0"
+    "@uifabric/utilities" ">=4.10.2 <5.0.0"
     glamor "^2.20.24"
     rtl-css-js "^1.1.1"
     tslib "^1.6.0"
 
-"@uifabric/utilities@>=4.10.1 <5.0.0", "@uifabric/utilities@>=4.9.1 <5.0.0":
-  version "4.10.1"
-  resolved "https://registry.yarnpkg.com/@uifabric/utilities/-/utilities-4.10.1.tgz#888cdaeff26a6563adf14ac74e107983a058531c"
+"@uifabric/utilities@>=4.10.2 <5.0.0", "@uifabric/utilities@>=4.7.2 <5.0.0":
+  version "4.10.2"
+  resolved "https://registry.yarnpkg.com/@uifabric/utilities/-/utilities-4.10.2.tgz#5b888675660614f1ea40668e038bc80c6a1c9be2"
   dependencies:
     prop-types "^15.5.10"
     tslib "^1.6.0"
@@ -2459,13 +2459,13 @@ object.omit@^2.0.0:
     for-own "^0.1.4"
     is-extendable "^0.1.1"
 
-office-ui-fabric-react@^4.37.2:
-  version "4.37.2"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-4.37.2.tgz#bd6d0c547f69d2f633f0ce1c5b9510016fa22b6e"
+office-ui-fabric-react@4.20.0:
+  version "4.20.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-4.20.0.tgz#ef9f849bac1d3367206c170a7753b03516b55ba1"
   dependencies:
-    "@microsoft/load-themed-styles" "^1.5.1"
-    "@uifabric/styling" ">=0.20.1 <1.0.0"
-    "@uifabric/utilities" ">=4.10.1 <5.0.0"
+    "@microsoft/load-themed-styles" "^1.2.2"
+    "@uifabric/styling" ">=0.13.9 <1.0.0"
+    "@uifabric/utilities" ">=4.7.2 <5.0.0"
     prop-types "^15.5.10"
     tslib "^1.6.0"
 
