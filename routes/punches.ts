@@ -139,7 +139,7 @@ export function registerPunchRoutes(app: Express, router: RouterFunction<User>) 
     router({
         label: "Punch out",
         path: BASE_PATH + ":id",
-        method: "post",
+        method: "put",
         requireAuth: true,
         paramValidation: gv.object<requests.GetPutDelete>({
             id: gv.string().required().label("URL parameter 'id'")
