@@ -1,3 +1,4 @@
+import * as Requests from 'requests/punches';
 import { BaseClient } from './base';
 import { Punch } from 'app';
 
@@ -10,7 +11,11 @@ export class PunchClient extends BaseClient {
         return this.sendRequest<Punch>("", "POST")
     }
 
-    public punchOut(id: string) {
-        return this.sendRequest<Punch>(id, "PUT")
+    public punchOut(id: string, rev: string) {
+        return this.sendRequest<Punch>(id, "PUT", { qs: { rev } })
+    }
+
+    public listPunches() {
+        return this.sendRequest<Requests.ListResponse>("", "GET");
     }
 }

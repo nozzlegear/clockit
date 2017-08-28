@@ -33,7 +33,7 @@ declare module "requests/auth" {
 }
 
 declare module "requests/punches" {
-    import { Week } from "app";
+    import { Week, Punch } from "app";
 
     export { GetPutDelete } from "requests";
 

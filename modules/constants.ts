@@ -24,6 +24,8 @@ export const AUTH_HEADER_NAME = "x-clockit-token";
 
 export const CACHE_SEGMENT_AUTH = "auth-invalidation";
 
+export const CURRENT_PUNCH_NAME = SNAKED_APP_NAME + "_current_punch";
+
 // process.env is available during webpack and server, and is injected in the browser by webpack too. This will work anywhere.
 export const ISLIVE = env.NODE_ENV === "production";
 

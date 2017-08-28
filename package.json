@@ -5,7 +5,7 @@
   "main": "bin/server.js",
   "scripts": {
     "prebarrel": "dos2unix ./node_modules/barrelsby/bin/index.js",
-    "barrel": "barrelsby -d ./routes --delete && barrelsby -d ./database --delete && barrelsby -d ./stores --delete",
+    "barrel": "barrelsby -d ./routes --delete && barrelsby -d ./database --delete && barrelsby -d ./stores --delete && barrelsby -d ./api --delete",
     "build": "webpack",
     "watch": "webpack --watch",
     "prebuild": "npm run barrel",
