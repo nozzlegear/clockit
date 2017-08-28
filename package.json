@@ -4,7 +4,6 @@
   "private": true,
   "main": "bin/server.js",
   "scripts": {
-    "prebarrel": "dos2unix ./node_modules/barrelsby/bin/index.js",
     "barrel": "barrelsby -d ./routes --delete && barrelsby -d ./database --delete && barrelsby -d ./stores --delete && barrelsby -d ./api --delete",
     "build": "webpack",
     "watch": "webpack --watch",
@@ -39,7 +38,7 @@
     "@types/react-router": "2.0.38",
     "@types/webpack": "^3.0.10",
     "autoprefixer-stylus": "^0.13.0",
-    "barrelsby": "^0.0.3",
+    "barrelsby": "0.0.5",
     "css-loader": "^0.28.4",
     "mkdirp": "^0.5.1",
     "pkg": "^4.1.1",
