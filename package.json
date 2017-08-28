@@ -4,6 +4,7 @@
   "private": true,
   "main": "bin/server.js",
   "scripts": {
+    "prebarrel": "dos2unix ./node_modules/barrelsby/bin/index.js",
     "barrel": "barrelsby -d ./routes --delete && barrelsby -d ./database --delete && barrelsby -d ./stores --delete",
     "build": "webpack",
     "watch": "webpack --watch",
