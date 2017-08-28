@@ -68,7 +68,7 @@ export function registerPunchRoutes(app: Express, router: RouterFunction<User>) 
 
             const startOfWeek = getClosestSunday()
             const fourWeeksAgo = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth() - 1)
-            const currentPeriod = await Punches.listPunchesByTimestamp(user._id, { startTime: startOfWeek.getTime() });
+            const currentPeriod = await Punches.listPunchesByTimestamp(user._id, { startTime: startOfWeek.getTime(), endTime: Date.now() });
             const last4Weeks = await Punches.listPunchesByTimestamp(user._id, { startTime: fourWeeksAgo.getTime(), endTime: startOfWeek.getTime() })
 
             res.json<requests.ListResponse>({

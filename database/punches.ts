@@ -50,8 +50,9 @@ class PunchDbWrapper extends Davenport.Client<Punch> {
 
     public async listPunchesByTimestamp(userId: string, keys: { startTime?: number; endTime?: number }) {
         const result = await this.viewWithDocs<Punch>("list", PunchDbWrapper.BY_TIMESTAMP_VIEW_NAME, {
-            start_key: keys.startTime !== undefined ? [userId, keys.startTime] : [userId],
-            end_key: keys.endTime !== undefined ? [userId, keys.endTime] : [userId]
+            start_key: keys.startTime !== undefined ? [userId, keys.startTime] : [userId, Date.now()],
+            end_key: keys.endTime !== undefined ? [userId, keys.endTime] : [userId, Date.now()],
+            descending: false,
         });
 
         return {
