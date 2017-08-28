@@ -28,7 +28,7 @@ class PunchDbWrapper extends Davenport.Client<Punch> {
                     {
                         name: PunchDbWrapper.BY_TIMESTAMP_VIEW_NAME,
                         map: function (doc: Punch) {
-                            emit(doc.start_date)
+                            emit([doc.user_id, doc.start_date])
                         }.toString()
                     },
                     {
@@ -48,8 +48,11 @@ class PunchDbWrapper extends Davenport.Client<Punch> {
         return PunchDbWrapper.Config;
     }
 
-    public async listPunchesByTimestamp(startTime?: number) {
-        const result = await this.viewWithDocs<Punch>("list", PunchDbWrapper.BY_TIMESTAMP_VIEW_NAME, { start_key: startTime });
+    public async listPunchesByTimestamp(userId: string, keys: { startTime?: number; endTime?: number }) {
+        const result = await this.viewWithDocs<Punch>("list", PunchDbWrapper.BY_TIMESTAMP_VIEW_NAME, {
+            start_key: keys.startTime !== undefined ? [userId, keys.startTime] : [userId],
+            end_key: keys.endTime !== undefined ? [userId, keys.endTime] : [userId]
+        });
 
         return {
             ...result,

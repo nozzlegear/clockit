@@ -976,9 +976,9 @@ date-now@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/date-now/-/date-now-0.1.4.tgz#eaf439fd4d4848ad74e5cc7dbef200672b9e345b"
 
-davenport@^2.0.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/davenport/-/davenport-2.6.0.tgz#a58308366745dd04efd777da8b1246db2d51512d"
+davenport@^2.7.1:
+  version "2.7.1"
+  resolved "https://registry.yarnpkg.com/davenport/-/davenport-2.7.1.tgz#d1becc7575189a7ced30daf2a330ccb2b6740db4"
   dependencies:
     axios "^0.15.3"
     logspect "^1.0.2"

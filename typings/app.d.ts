@@ -6,8 +6,9 @@ declare module "app" {
     }
 
     export interface Punch extends CouchDoc {
+        user_id: string
         start_date: number
-        end_date: number
+        end_date?: number
     }
 
     export interface Week {
@@ -16,9 +17,32 @@ declare module "app" {
     }
 }
 
+declare module "requests" {
+    export interface GetPutDelete {
+        id: string
+    }
+}
+
 declare module "requests/auth" {
     export interface LoginOrRegister {
         username: string
         password: string
+    }
+
+    export { GetPutDelete } from "requests"
+}
+
+declare module "requests/punches" {
+    import { Week } from "app";
+
+    export { GetPutDelete } from "requests";
+
+    export interface PunchOutQuery {
+        rev: string
+    }
+
+    export interface ListResponse {
+        current: Punch[]
+        previous: Week[]
     }
 }
