@@ -48,7 +48,10 @@ export function registerPunchRoutes(app: Express, router: RouterFunction<User>) 
         const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 
         // Return array of year and week number
-        return [d.getUTCFullYear(), weekNo];
+        return {
+            year: d.getUTCFullYear(),
+            week: weekNo
+        };
     }
 
     router({
@@ -71,7 +74,25 @@ export function registerPunchRoutes(app: Express, router: RouterFunction<User>) 
             res.json<requests.ListResponse>({
                 current: currentPeriod.rows,
                 previous: last4Weeks.rows.reduce<Week[]>((weeks, punch) => {
-                    // TODO: Find the start and end of the week
+                    const { year, week } = getWeekNumber(punch.start_date);
+                    const label = `${year}-${week}`
+                    const index = weeks.findIndex(w => w.label === label)
+
+                    if (index === -1) {
+                        weeks.push({
+                            label,
+                            punches: [punch]
+                        })
+                    } else {
+                        const original = weeks[index]
+                        weeks[index] = {
+                            ...original,
+                            punches: [
+                                ...original.punches,
+                                punch
+                            ]
+                        }
+                    }
 
                     return weeks;
                 }, [])
