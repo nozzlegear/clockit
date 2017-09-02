@@ -157,6 +157,7 @@ export const HomePage = observer((props: React.Props<any>) => {
     const now = Date.now();
     const punch = Stores.Punches.current_punch;
     const since = Stores.Punches.start_of_week;
+    const punchId = punch && punch._id || "-1";
 
     if (Stores.Punches.loading) {
         return (
@@ -177,7 +178,7 @@ export const HomePage = observer((props: React.Props<any>) => {
                     const endTime = punch.end_date || now
 
                     return (
-                        <div className={classNames("punch", { current: !punch.end_date })} key={punch._id}>
+                        <div className={classNames("punch", { active: punch._id === punchId })} key={punch._id}>
                             <div className="previous-record">
                                 <div className="time">
                                     {formatTimeString(endTime - punch.start_date)}

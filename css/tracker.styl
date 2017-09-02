@@ -6,7 +6,6 @@ body {
 }
 
 #home {
-
     .time-display {
         fontWeight = 300;
 
@@ -44,6 +43,22 @@ body {
         .actions {
             background-color: rgba(0,0,0,.2);
             padding: 15px 0;
+        }
+    }
+
+    .punches {
+        .punch {
+            border-bottom: 1px solid #ccc;
+            color: #777;
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            &.active {
+                color: #333;
+                // Add a box shadow bottom
+            }
         }
     }
 }
