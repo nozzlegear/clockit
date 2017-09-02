@@ -37,6 +37,8 @@ class PunchStoreFactory {
 
     @observable previous_weeks: Week[] = []
 
+    @observable loading = true
+
     @computed get current_punch(): Punch | undefined {
         // Current punch will be the first one in this week's punches that don't have an end date
         return this.this_weeks_punches.find(i => !i.end_date)
@@ -49,6 +51,8 @@ class PunchStoreFactory {
     }
 
     @action load(data: ListResponse) {
+        console.log("Loading punch store");
+
         this.this_weeks_punches = data.current.sort((a, b) => b.start_date - a.start_date)
         this.previous_weeks = data.previous.sort((a, b) =>
             b.punches.reduce((highestStart, punch) => highestStart > punch.start_date ? highestStart : punch.start_date, 0)
@@ -57,6 +61,11 @@ class PunchStoreFactory {
         )
 
         this.current_punch_seconds = this.calculatePunchSeconds(this.current_punch)
+    }
+
+    @action setLoadingStatus(to: boolean) {
+        console.log("Setting Stores.Punches.Loading to :", to);
+        this.loading = to;
     }
 }
 
