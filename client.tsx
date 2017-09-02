@@ -3,7 +3,6 @@ import AuthPage from './pages/auth';
 import ErrorPage from './pages/error';
 import HomePage from './pages/home';
 import Paths from './modules/paths';
-import RegisterPage from './pages/register';
 import { APP_NAME } from './modules/constants';
 import { Auth as AuthStore } from './stores';
 import {
@@ -56,8 +55,8 @@ export default function Main(props) {
                         <Route path={Paths.home.index} component={HomePage} />
                     </Route>
                     <Route component={Main}>
-                        <Route path={Paths.auth.login} component={AuthPage} />
-                        <Route path={Paths.auth.register} component={RegisterPage} />
+                        <Route path={Paths.auth.login} component={props => <AuthPage type="login" {...props} />} />
+                        <Route path={Paths.auth.register} component={props => <AuthPage type="register" {...props} />} />
                     </Route>
                     <Route path={"/error/:statusCode"} component={ErrorPage} />
                     <Redirect path={"*"} to={"/error/404"} />
