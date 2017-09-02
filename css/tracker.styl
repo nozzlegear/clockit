@@ -1,0 +1,49 @@
+commonMargin = 0 0 15px 0;
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#home {
+
+    .time-display {
+        fontWeight = 300;
+
+        background: #08466f;
+        background-repeat: repeat;
+        background-image: url("/images/bg.png")
+        background-size: auto;
+        background-position: 0% 0%;
+        color: #fff;
+        text-align: center;
+        padding: 15px 0 0 0;
+        margin: commonMargin;
+
+        &.empty {
+            padding: 15px 0;
+        }
+
+        .app-title {
+            margin: 0;
+            font-weight: fontWeight;
+        }
+
+        .length {
+            margin: 0;
+            padding: 30px 0 60px;
+            font-size: 35px;
+        }
+
+        .since {
+            display: block;
+            font-weight: fontWeight;
+            font-size: 15px;
+        }
+
+        .actions {
+            background-color: rgba(0,0,0,.2);
+            padding: 15px 0;
+        }
+    }
+}
