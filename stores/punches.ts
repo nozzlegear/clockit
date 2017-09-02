@@ -4,6 +4,7 @@ import {
     computed,
     observable
     } from 'mobx';
+import { getClosestSunday } from '../modules/dates';
 import { ListResponse } from 'requests/punches';
 import { Punch, Week } from 'app';
 
@@ -40,6 +41,15 @@ class PunchStoreFactory {
     @observable loading = true
 
     @observable current_punch_seconds: number = 0
+
+    @computed get start_of_week(): string {
+        const earliestDate = this.this_weeks_punches.reduce<number>((smallest, punch) => {
+            return punch.start_date > smallest ? punch.start_date : smallest;
+        }, Date.now());
+        const sunday = getClosestSunday(new Date(earliestDate));
+
+        return sunday.toLocaleDateString("en-US", { weekday: "long", month: "short", year: "numeric", day: "numeric" });
+    }
 
     @computed get current_punch(): Punch | undefined {
         // Current punch will be the first one in this week's punches that don't have an end date

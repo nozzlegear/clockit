@@ -128,7 +128,7 @@ function PageWrapper(props: React.Props<any>) {
     )
 }
 
-function TimeDisplay(props: React.Props<any> & { time: string }) {
+function TimeDisplay(props: React.Props<any> & { time: string, since: string }) {
     const empty = !props.children;
 
     return (
@@ -138,7 +138,7 @@ function TimeDisplay(props: React.Props<any> & { time: string }) {
                 {props.time}
                 {
                     !empty ?
-                        <small className="since">{`since Sunday, August 2nd, 2017.`}</small>
+                        <small className="since">{`since ${props.since}.`}</small>
                         : null
                 }
             </h2>
@@ -156,11 +156,12 @@ function TimeDisplay(props: React.Props<any> & { time: string }) {
 export const HomePage = observer((props: React.Props<any>) => {
     const now = Date.now();
     const punch = Stores.Punches.current_punch;
+    const since = Stores.Punches.start_of_week;
 
     if (Stores.Punches.loading) {
         return (
             <PageWrapper ref={r => runFirstMount()}>
-                <TimeDisplay time="..." />
+                <TimeDisplay time="..." since={since} />
                 <Spinner label={`Loading previous punches, please wait.`} />
             </PageWrapper>
         )
@@ -168,7 +169,7 @@ export const HomePage = observer((props: React.Props<any>) => {
 
     return (
         <PageWrapper ref={r => runFirstMount()}>
-            <TimeDisplay time={formatTimeString(Stores.Punches.total_seconds_for_week)}>
+            <TimeDisplay time={formatTimeString(Stores.Punches.total_seconds_for_week)} since={since}>
                 <PrimaryButton onClick={e => togglePunch(e)} text={punch ? `Punch Out` : `Punch In`} />
             </TimeDisplay>
             <div className="punches">
