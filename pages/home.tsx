@@ -1,160 +1,185 @@
+import * as classNames from 'classnames';
 import * as Clients from '../api';
 import * as Constants from '../modules/constants';
 import * as React from 'react';
 import * as Stores from '../stores';
+import PATHS from '../modules/paths';
 import { ApiError } from 'gearworks-http/bin';
 import { AppRouter } from '../components/approuter';
+import { handleUnauthorized } from '../modules/unauthorized';
 import { Link } from 'react-router';
 import { ListResponse } from 'requests/punches';
 import { observer } from 'mobx-react';
 import { PrimaryButton, Spinner, SpinnerSize } from 'office-ui-fabric-react';
 import { Punch } from 'app';
 
+function formatTimeDigit(digit: number) {
+    return digit < 10 ? `0${digit}` : digit.toString()
+}
+
+function formatTimeString(lengthInMilliseconds: number | undefined) {
+    if (lengthInMilliseconds === undefined) {
+        return `Calculating...`
+    }
+
+    const hourLength = 3600
+    const lengthInSeconds = lengthInMilliseconds / 1000;
+    const hours = formatTimeDigit(Math.floor(lengthInSeconds / hourLength))
+    const minutes = formatTimeDigit(Math.floor(lengthInSeconds % hourLength / 60))
+    const seconds = formatTimeDigit(Math.floor(lengthInSeconds % hourLength % 60 % 60))
+
+    return `${hours}:${minutes}:${seconds}`
+}
+
+async function togglePunch(e: React.MouseEvent<any>) {
+    if (Stores.Punches.loading) {
+        return;
+    }
+
+    Stores.Punches.setLoadingStatus(true);
+
+    const client = new Clients.PunchClient(Stores.Auth.token);
+    let result: Punch;
+
+    try {
+        if (Stores.Punches.current_punch) {
+            // Need to punch out and delete the localstorage value
+            const current = Stores.Punches.current_punch;
+            result = await client.punchOut(current._id as string, current._rev as string)
+
+            localStorage.removeItem(Constants.CURRENT_PUNCH_NAME)
+        } else {
+            // Need to punch in and save the localstorage value
+            result = await client.punchIn();
+
+            localStorage.setItem(Constants.CURRENT_PUNCH_NAME, JSON.stringify(""));
+        }
+    } catch (_e) {
+        const e: ApiError = _e;
+
+        if (e.unauthorized && handleUnauthorized(PATHS.home.index)) {
+            return;
+        }
+
+        // TODO: Make sure the server returns document conflict errors and display to the user that
+        // their current view is out of date.
+        alert(e.message)
+
+        return;
+    } finally {
+        Stores.Punches.setLoadingStatus(false);
+    }
+
+    // push the result to the mobx store of current punches
+    Stores.Punches.addCurrentPunch(result)
+
+    // Load the current list again (in case the week has changed, client isn't on the same device, etc)
+    try {
+        const list = await client.listPunches();
+
+        Stores.Punches.load(list);
+    } catch (_e) {
+        const e: ApiError = _e;
+
+        if (e.unauthorized && handleUnauthorized(PATHS.home.index)) {
+            return;
+        }
+
+        alert(e.message);
+
+        return;
+    }
+}
+
+let hasPreviouslyRunFirstMount = false;
+
+async function runFirstMount() {
+    if (hasPreviouslyRunFirstMount) {
+        return;
+    }
+
+    Stores.Punches.setLoadingStatus(true);
+    hasPreviouslyRunFirstMount = true;
+
+    const client = new Clients.PunchClient(Stores.Auth.token)
+
+    try {
+        const punches = await client.listPunches();
+
+        Stores.Punches.load(punches);
+    } catch (_e) {
+        const e: ApiError = _e;
+
+        if (e.unauthorized && handleUnauthorized(PATHS.home.index)) {
+            return
+        }
+
+        alert(e.message);
+    } finally {
+        Stores.Punches.setLoadingStatus(false);
+    }
+}
+
 function PageWrapper(props: React.Props<any>) {
     return (
         <section id="home">
-            <h2>{Constants.APP_NAME}</h2>
-            <div>
-                {props.children}
-            </div>
+            {props.children}
         </section>
     )
 }
 
-export interface HomePageState {
-    loading: boolean
+function TimeDisplay(props: React.Props<any> & { time: string }) {
+    const empty = !props.children;
+
+    return (
+        <div className={classNames("time-display", { empty })}>
+            <h1 className="app-title">{Constants.APP_NAME}</h1>
+            <h2 className="length">
+                {props.time}
+                {
+                    !empty ?
+                        <small className="since">{`since Sunday, August 2nd, 2017.`}</small>
+                        : null
+                }
+            </h2>
+            {
+                !empty ?
+                    <div className="actions">
+                        {props.children}
+                    </div>
+                    : null
+            }
+        </div>
+    )
 }
 
-@observer
-export class HomePage extends AppRouter<any, Partial<HomePageState>> {
-    public state: HomePageState = {
-        loading: true
-    }
+export const HomePage = observer((props: React.Props<any>) => {
+    const now = Date.now();
+    const punch = Stores.Punches.current_punch;
 
-    private formatTimeDigit(digit: number) {
-        return digit < 10 ? `0${digit}` : digit.toString()
-    }
-
-    private formatTimeString(lengthInMilliseconds: number | undefined) {
-        if (lengthInMilliseconds === undefined) {
-            return `Calculating...`
-        }
-
-        const hourLength = 3600
-        const lengthInSeconds = lengthInMilliseconds / 1000;
-        const hours = this.formatTimeDigit(Math.floor(lengthInSeconds / hourLength))
-        const minutes = this.formatTimeDigit(Math.floor(lengthInSeconds % hourLength / 60))
-        const seconds = this.formatTimeDigit(Math.floor(lengthInSeconds % hourLength % 60 % 60))
-
-        return `${hours}:${minutes}:${seconds}`
-    }
-
-    private async togglePunch(e: React.MouseEvent<any>) {
-        if (this.state.loading) {
-            return;
-        }
-
-        await this.setState({ loading: true })
-
-        const client = new Clients.PunchClient(Stores.Auth.token);
-        let result: Punch;
-
-        try {
-            if (Stores.Punches.current_punch) {
-                // Need to punch out and delete the localstorage value
-                const current = Stores.Punches.current_punch;
-                result = await client.punchOut(current._id as string, current._rev as string)
-
-                localStorage.removeItem(Constants.CURRENT_PUNCH_NAME)
-            } else {
-                // Need to punch in and save the localstorage value
-                result = await client.punchIn();
-
-                localStorage.setItem(Constants.CURRENT_PUNCH_NAME, JSON.stringify(""));
-            }
-        } catch (_e) {
-            const e: ApiError = _e;
-
-            if (e.unauthorized && this.handleUnauthorized(this.PATHS.home.index)) {
-                return;
-            }
-
-            // TODO: Make sure the server returns document conflict errors and display to the user that
-            // their current view is out of date.
-            alert(e.message)
-
-            return;
-        } finally {
-            this.setState({ loading: false });
-        }
-
-        // push the result to the mobx store of current punches
-        Stores.Punches.addCurrentPunch(result)
-
-        // Load the current list again (in case the week has changed, client isn't on the same device, etc)
-        try {
-            const list = await client.listPunches();
-
-            Stores.Punches.load(list);
-        } catch (_e) {
-            const e: ApiError = _e;
-
-            if (e.unauthorized && this.handleUnauthorized(this.PATHS.home.index)) {
-                return;
-            }
-
-            alert(e.message);
-
-            return;
-        }
-    }
-
-    public async componentDidMount() {
-        const client = new Clients.PunchClient(Stores.Auth.token)
-
-        try {
-            const punches = await client.listPunches();
-
-            Stores.Punches.load(punches);
-        } catch (_e) {
-            const e: ApiError = _e;
-
-            if (e.unauthorized && this.handleUnauthorized(this.PATHS.home.index)) {
-                return
-            }
-
-            alert(e.message);
-        } finally {
-            this.setState({ loading: false });
-        }
-    }
-
-    public render() {
-        const now = Date.now();
-        const punch = Stores.Punches.current_punch;
-
-        if (this.state.loading) {
-            return <PageWrapper><Spinner label={`Loading previous punches, please wait.`} /></PageWrapper>
-        }
-
+    if (Stores.Punches.loading) {
         return (
-            <PageWrapper>
-                <h1>
-                    {
-                        !!punch ?
-                            this.formatTimeString(Stores.Punches.current_punch_seconds) :
-                            "You are not punched in."
-                    }
-                </h1>
-                <PrimaryButton onClick={e => this.togglePunch(e)} text={punch ? `Punch Out` : `Punch In`} />
+            <PageWrapper ref={r => runFirstMount()}>
+                <TimeDisplay time="..." />
+                <Spinner label={`Loading previous punches, please wait.`} />
+            </PageWrapper>
+        )
+    }
+
+    return (
+        <PageWrapper ref={r => runFirstMount()}>
+            <TimeDisplay time={!!punch ? formatTimeString(Stores.Punches.current_punch_seconds) : "You are not punched in."}>
+                <PrimaryButton onClick={e => togglePunch(e)} text={punch ? `Punch Out` : `Punch In`} />
+            </TimeDisplay>
+            <div className="punches">
                 {Stores.Punches.this_weeks_punches.map(punch => {
                     const endTime = punch.end_date || now
 
                     return (
-                        <div key={punch._id}>
+                        <div className={classNames("punch", { current: !punch.end_date })} key={punch._id}>
                             <div className="previous-record">
                                 <div className="time">
-                                    {this.formatTimeString(endTime - punch.start_date)}
+                                    {formatTimeString(endTime - punch.start_date)}
                                 </div>
                                 <div className="date">
                                     {new Date(punch.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
@@ -163,25 +188,25 @@ export class HomePage extends AppRouter<any, Partial<HomePageState>> {
                         </div>
                     )
                 })}
-                <h2>{`Previous Weeks`}</h2>
-                {
-                    Stores.Punches.previous_weeks.map(week =>
-                        <div className="week">
-                            <div className="label">{week.label}</div>
-                            <div className="length">
-                                {this.formatTimeString(week.punches.reduce((total, punch) => (punch.end_date || now) - punch.start_date, 0))}
-                            </div>
+            </div>
+            <h2>{`Previous Weeks`}</h2>
+            {
+                Stores.Punches.previous_weeks.map(week =>
+                    <div className="week">
+                        <div className="label">{week.label}</div>
+                        <div className="length">
+                            {formatTimeString(week.punches.reduce((total, punch) => (punch.end_date || now) - punch.start_date, 0))}
                         </div>
-                    )
-                }
-                <p className="more">
-                    <Link to={this.PATHS.home.week}>
-                        {`More`}
-                    </Link>
-                </p>
-            </PageWrapper>
-        )
-    }
-}
+                    </div>
+                )
+            }
+            <p className="more">
+                <Link to={PATHS.home.week}>
+                    {`More`}
+                </Link>
+            </p>
+        </PageWrapper>
+    )
+})
 
 export default HomePage
