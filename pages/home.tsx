@@ -168,7 +168,7 @@ export const HomePage = observer((props: React.Props<any>) => {
 
     return (
         <PageWrapper ref={r => runFirstMount()}>
-            <TimeDisplay time={!!punch ? formatTimeString(Stores.Punches.current_punch_seconds) : "You are not punched in."}>
+            <TimeDisplay time={formatTimeString(Stores.Punches.total_seconds_for_week)}>
                 <PrimaryButton onClick={e => togglePunch(e)} text={punch ? `Punch Out` : `Punch In`} />
             </TimeDisplay>
             <div className="punches">
