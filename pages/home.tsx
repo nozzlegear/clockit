@@ -159,13 +159,11 @@ function PunchDisplay(props: React.Props<any> & { punch: Punch, active: boolean 
 
     return (
         <div className={classNames("punch", { active })} key={punch._id}>
-            <div className="previous-record">
-                <div className="time">
-                    {formatTimeString(endTime - punch.start_date)}
-                </div>
-                <div className="date">
-                    {new Date(punch.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                </div>
+            <div className="time">
+                {formatTimeString(endTime - punch.start_date)}
+            </div>
+            <div className="date">
+                {new Date(punch.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </div>
         </div>
     )
