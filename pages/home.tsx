@@ -215,22 +215,19 @@ export const HomePage = observer((props: React.Props<any>) => {
                 }
                 {Stores.Punches.this_week.map(punch => <PunchDisplay key={punch._id} punch={punch} active={false} />)}
             </div>
-            <h2>{`Previous Weeks`}</h2>
-            {
-                Stores.Punches.last_four_weeks.map(week =>
-                    <div className="week">
-                        <div className="label">{week.label}</div>
-                        <div className="length">
-                            {formatTimeDuration(week.punches.reduce((total, punch) => (punch.end_date || now) - punch.start_date, 0))}
+            <div className="previous-weeks">
+                <h4>{`Previous Weeks`}</h4>
+                {
+                    Stores.Punches.last_four_weeks.map(week =>
+                        <div className="week">
+                            <div className="length">
+                                {formatTimeDuration(week.punches.reduce((total, punch) => (punch.end_date || now) - punch.start_date, 0))}
+                            </div>
+                            <div className="label">{`Week of ${week.label}`}</div>
                         </div>
-                    </div>
-                )
-            }
-            <p className="more">
-                <Link to={PATHS.home.week}>
-                    {`More`}
-                </Link>
-            </p>
+                    )
+                }
+            </div>
         </PageWrapper>
     )
 })

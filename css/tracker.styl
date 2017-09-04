@@ -47,16 +47,29 @@ body {
         }
     }
 
-    .punches {
-        .punch {
-            fadedColor = #777;
+    .punches, .previous-weeks {
+        padding = 15px;
+        fadedColor = #777;
 
+        h4 {
+            padding: 15px;
+            text-align: center;
+            margin: 0;
+            color: #333;
+        }
+
+        .more {
+            padding: 15px;
+            text-align: center;
+        }
+
+        .punch, .week {
             border-bottom: 1px solid #ccc;
             color: fadedColor;
             display: flex;
             justify-content: space-between
             align-items: center;
-            padding: 15px
+            padding: padding
 
             &:last-child {
                 border-bottom: none;
