@@ -1,5 +1,3 @@
-commonMargin = 0 0 15px 0;
-
 body {
     margin: 0;
     padding: 0;
@@ -17,10 +15,13 @@ body {
         color: #fff;
         text-align: center;
         padding: 15px 0 0 0;
-        margin: commonMargin;
 
         &.empty {
             padding: 15px 0;
+        }
+
+        .ms-Spinner-label {
+            color: #fff;
         }
 
         .app-title {
@@ -48,8 +49,14 @@ body {
 
     .punches {
         .punch {
+            fadedColor = #777;
+
             border-bottom: 1px solid #ccc;
-            color: #777;
+            color: fadedColor;
+            display: flex;
+            justify-content: space-between
+            align-items: center;
+            padding: 15px
 
             &:last-child {
                 border-bottom: none;
@@ -57,7 +64,15 @@ body {
 
             &.active {
                 color: #333;
-                // Add a box shadow bottom
+                box-shadow: 1px 1px 8px #ccc;
+            }
+
+            .date {
+                text-align: right;
+
+                .start-and-end {
+                    color: fadedColor;
+                }
             }
         }
     }

@@ -13,22 +13,28 @@ import { observer } from 'mobx-react';
 import { PrimaryButton, Spinner, SpinnerSize } from 'office-ui-fabric-react';
 import { Punch } from 'app';
 
-function formatTimeDigit(digit: number) {
+function formatDurationDigit(digit: number) {
     return digit < 10 ? `0${digit}` : digit.toString()
 }
 
-function formatTimeString(lengthInMilliseconds: number | undefined) {
+function formatTimeDuration(lengthInMilliseconds: number | undefined) {
     if (lengthInMilliseconds === undefined) {
         return `Calculating...`
     }
 
     const hourLength = 3600
     const lengthInSeconds = lengthInMilliseconds / 1000;
-    const hours = formatTimeDigit(Math.floor(lengthInSeconds / hourLength))
-    const minutes = formatTimeDigit(Math.floor(lengthInSeconds % hourLength / 60))
-    const seconds = formatTimeDigit(Math.floor(lengthInSeconds % hourLength % 60 % 60))
+    const hours = formatDurationDigit(Math.floor(lengthInSeconds / hourLength))
+    const minutes = formatDurationDigit(Math.floor(lengthInSeconds % hourLength / 60))
+    const seconds = formatDurationDigit(Math.floor(lengthInSeconds % hourLength % 60 % 60))
 
     return `${hours}:${minutes}:${seconds}`
+}
+
+function formatTimeString(date: number | Date) {
+    const val = typeof (date) === "number" ? new Date(date) : date;
+
+    return val.toLocaleTimeString("en-US", { hour: "numeric", minute: "numeric" })
 }
 
 async function togglePunch(e: React.MouseEvent<any>) {
@@ -155,15 +161,19 @@ function TimeDisplay(props: React.Props<any> & { time: string, since: string }) 
 
 function PunchDisplay(props: React.Props<any> & { punch: Punch, active: boolean }) {
     const { punch, active } = props;
+
     const endTime = punch.end_date || Date.now();
 
     return (
         <div className={classNames("punch", { active })} key={punch._id}>
             <div className="time">
-                {formatTimeString(endTime - punch.start_date)}
+                {formatTimeDuration(endTime - punch.start_date)}
             </div>
             <div className="date">
                 {new Date(punch.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                <div className="start-and-end">
+                    {`${formatTimeString(punch.start_date)} to ${formatTimeString(endTime)}`}
+                </div>
             </div>
         </div>
     )
@@ -186,7 +196,7 @@ export const HomePage = observer((props: React.Props<any>) => {
 
     return (
         <PageWrapper ref={r => runFirstMount()}>
-            <TimeDisplay time={formatTimeString(Stores.Punches.total_seconds_for_week)} since={since}>
+            <TimeDisplay time={formatTimeDuration(Stores.Punches.total_seconds_for_week)} since={since}>
                 <PrimaryButton onClick={e => togglePunch(e)} text={!!punch ? `Punch Out` : `Punch In`} />
             </TimeDisplay>
             <div className="punches">
@@ -203,7 +213,7 @@ export const HomePage = observer((props: React.Props<any>) => {
                     <div className="week">
                         <div className="label">{week.label}</div>
                         <div className="length">
-                            {formatTimeString(week.punches.reduce((total, punch) => (punch.end_date || now) - punch.start_date, 0))}
+                            {formatTimeDuration(week.punches.reduce((total, punch) => (punch.end_date || now) - punch.start_date, 0))}
                         </div>
                     </div>
                 )
