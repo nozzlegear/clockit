@@ -1,6 +1,7 @@
 import * as boom from 'boom';
 import * as gv from 'gearworks-validation';
 import * as requests from 'requests/punches';
+import { DavenportError, PostPutCopyResponse } from 'davenport/bin';
 import { Express } from 'express';
 import { getClosestSunday, getWeekNumber } from '../modules/dates';
 import { Punch, User, Week } from 'app';
@@ -143,18 +144,29 @@ export function registerPunchRoutes(app: Express, router: RouterFunction<User>) 
                 return next(badUserBoom())
             }
 
-            const punch = await Punches.get(params.id)
+            const punch = await Punches.get(params.id, query.rev)
+            let updateResult: PostPutCopyResponse
 
             if (punch.user_id !== user._id) {
                 return next(boom.unauthorized(`Punch does not belong to user.`))
             }
 
-            const result = await Punches.put(params.id, {
-                ...punch,
-                end_date: Date.now()
-            }, query.rev)
+            try {
+                updateResult = await Punches.put(params.id, {
+                    ...punch,
+                    end_date: Date.now()
+                }, query.rev)
+            } catch (_e) {
+                const error: DavenportError = _e;
 
-            res.json<Punch>({ ...punch, _rev: result.rev });
+                if (error.status === 409 /* Document conflict error */) {
+                    return next(boom.conflict(error.message))
+                }
+
+                return next(error)
+            }
+
+            res.json<Punch>({ ...punch, _rev: updateResult.rev });
 
             return next();
         }

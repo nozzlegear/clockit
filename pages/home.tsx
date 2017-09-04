@@ -7,6 +7,7 @@ import PATHS from '../modules/paths';
 import { ApiError } from 'gearworks-http/bin';
 import { AppRouter } from '../components/approuter';
 import { handleUnauthorized } from '../modules/unauthorized';
+import { inspect } from 'logspect/bin';
 import { Link } from 'react-router';
 import { ListResponse } from 'requests/punches';
 import { observer } from 'mobx-react';
@@ -66,9 +67,16 @@ async function togglePunch(e: React.MouseEvent<any>) {
         if (e.unauthorized && handleUnauthorized(PATHS.home.index)) {
             return;
         }
+        else if (e.status === 409) {
+            inspect("Received document conflict error.", e);
 
-        // TODO: Make sure the server returns document conflict errors and display to the user that
-        // their current view is out of date.
+            if (confirm(`Document conflict error. It looks like your punches have been updated elsewhere. Your change was not saved. Would you like to refresh your punches to get the latest data?`)) {
+                window.location.reload(true);
+            }
+
+            return;
+        }
+
         alert(e.message)
 
         return;
