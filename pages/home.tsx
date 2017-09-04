@@ -194,7 +194,7 @@ export const HomePage = observer((props: React.Props<any>) => {
                         <PunchDisplay punch={Stores.Punches.current_punch} active={true} />
                         : null
                 }
-                {Stores.Punches.this_week.map(punch => <PunchDisplay punch={punch} active={false} />)}
+                {Stores.Punches.this_week.map(punch => <PunchDisplay key={punch._id} punch={punch} active={false} />)}
             </div>
             <h2>{`Previous Weeks`}</h2>
             {
