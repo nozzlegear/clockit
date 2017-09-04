@@ -24,6 +24,10 @@ export function registerPunchRoutes(app: Express, router: RouterFunction<User>) 
         return boom.expectationFailed(`Request passed authorization, but req.user or req.user._id was null or undefined.`)
     }
 
+    function matchOpenPunch(p: Punch) {
+        return p.end_date === undefined || p.end_date === null;
+    }
+
     router({
         label: "List punches and weeks",
         path: BASE_PATH,
@@ -40,10 +44,23 @@ export function registerPunchRoutes(app: Express, router: RouterFunction<User>) 
             const fourWeeksAgo = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth() - 1)
             const currentPeriod = await Punches.listPunchesByTimestamp(user._id, { startTime: startOfWeek.getTime(), endTime: Date.now() });
             const last4Weeks = await Punches.listPunchesByTimestamp(user._id, { startTime: fourWeeksAgo.getTime(), endTime: startOfWeek.getTime() })
+            let openPunch: Punch | undefined = undefined
+
+            // Check for an open punch and remove it from its array
+            if (currentPeriod.rows.some(matchOpenPunch)) {
+                const index = currentPeriod.rows.findIndex(matchOpenPunch);
+
+                openPunch = currentPeriod.rows.splice(index, 1)[0];
+            } else if (last4Weeks.rows.some(matchOpenPunch)) {
+                const index = last4Weeks.rows.findIndex(matchOpenPunch);
+
+                openPunch = last4Weeks.rows.splice(index, 1)[0];
+            }
 
             res.json<requests.ListResponse>({
-                current: currentPeriod.rows,
-                previous: last4Weeks.rows.reduce<Week[]>((weeks, punch) => {
+                open: openPunch,
+                this_week: currentPeriod.rows,
+                last_four_weeks: last4Weeks.rows.reduce<Week[]>((weeks, punch) => {
                     const { year, week } = getWeekNumber(punch.start_date);
                     const label = `${year}-${week}`
                     const index = weeks.findIndex(w => w.label === label)

@@ -34,16 +34,18 @@ class PunchStoreFactory {
         return !!punch ? (punch.end_date || Date.now()) - punch.start_date : 0
     }
 
-    @observable this_weeks_punches: Punch[] = []
+    @observable this_week: Punch[] = []
 
-    @observable previous_weeks: Week[] = []
+    @observable last_four_weeks: Week[] = []
+
+    @observable current_punch: Punch | undefined = undefined
 
     @observable loading = true
 
     @observable current_punch_seconds: number = 0
 
     @computed get start_of_week(): string {
-        const earliestDate = this.this_weeks_punches.reduce<number>((smallest, punch) => {
+        const earliestDate = this.this_week.reduce<number>((smallest, punch) => {
             return punch.start_date > smallest ? punch.start_date : smallest;
         }, Date.now());
         const sunday = getClosestSunday(new Date(earliestDate));
@@ -51,13 +53,8 @@ class PunchStoreFactory {
         return sunday.toLocaleDateString("en-US", { weekday: "long", month: "short", year: "numeric", day: "numeric" });
     }
 
-    @computed get current_punch(): Punch | undefined {
-        // Current punch will be the first one in this week's punches that don't have an end date
-        return this.this_weeks_punches.find(i => !i.end_date)
-    }
-
     @computed get total_seconds_for_week(): number {
-        const seconds = this.this_weeks_punches
+        const seconds = this.this_week
             .filter(i => i._id !== (this.current_punch && this.current_punch._id || undefined))
             .reduce<number>((total, punch) => total + this.calculatePunchSeconds(punch), 0)
 
@@ -66,17 +63,17 @@ class PunchStoreFactory {
     }
 
     @action addCurrentPunch(data: Punch) {
-        this.this_weeks_punches.push(data);
+        this.this_week.push(data);
     }
 
     @action load(data: ListResponse) {
-        this.this_weeks_punches = data.current.sort((a, b) => b.start_date - a.start_date)
-        this.previous_weeks = data.previous.sort((a, b) =>
+        this.this_week = data.this_week.sort((a, b) => b.start_date - a.start_date)
+        this.last_four_weeks = data.last_four_weeks.sort((a, b) =>
             b.punches.reduce((highestStart, punch) => highestStart > punch.start_date ? highestStart : punch.start_date, 0)
             -
             a.punches.reduce((highestStart, punch) => highestStart > punch.start_date ? highestStart : punch.start_date, 0)
         )
-
+        this.current_punch = data.open
         this.current_punch_seconds = this.calculatePunchSeconds(this.current_punch)
     }
 

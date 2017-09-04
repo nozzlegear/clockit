@@ -42,7 +42,8 @@ declare module "requests/punches" {
     }
 
     export interface ListResponse {
-        current: Punch[]
-        previous: Week[]
+        open?: Punch
+        this_week: Punch[]
+        last_four_weeks: Week[]
     }
 }
