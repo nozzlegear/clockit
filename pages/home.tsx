@@ -153,11 +153,28 @@ function TimeDisplay(props: React.Props<any> & { time: string, since: string }) 
     )
 }
 
+function PunchDisplay(props: React.Props<any> & { punch: Punch, active: boolean }) {
+    const { punch, active } = props;
+    const endTime = punch.end_date || Date.now();
+
+    return (
+        <div className={classNames("punch", { active })} key={punch._id}>
+            <div className="previous-record">
+                <div className="time">
+                    {formatTimeString(endTime - punch.start_date)}
+                </div>
+                <div className="date">
+                    {new Date(punch.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export const HomePage = observer((props: React.Props<any>) => {
-    const now = Date.now();
     const punch = Stores.Punches.current_punch;
     const since = Stores.Punches.start_of_week;
-    const punchId = punch && punch._id || "-1";
+    const now = Date.now();
 
     if (Stores.Punches.loading) {
         return (
@@ -171,29 +188,19 @@ export const HomePage = observer((props: React.Props<any>) => {
     return (
         <PageWrapper ref={r => runFirstMount()}>
             <TimeDisplay time={formatTimeString(Stores.Punches.total_seconds_for_week)} since={since}>
-                <PrimaryButton onClick={e => togglePunch(e)} text={punch ? `Punch Out` : `Punch In`} />
+                <PrimaryButton onClick={e => togglePunch(e)} text={!!punch ? `Punch Out` : `Punch In`} />
             </TimeDisplay>
             <div className="punches">
-                {Stores.Punches.this_weeks_punches.map(punch => {
-                    const endTime = punch.end_date || now
-
-                    return (
-                        <div className={classNames("punch", { active: punch._id === punchId })} key={punch._id}>
-                            <div className="previous-record">
-                                <div className="time">
-                                    {formatTimeString(endTime - punch.start_date)}
-                                </div>
-                                <div className="date">
-                                    {new Date(punch.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                </div>
-                            </div>
-                        </div>
-                    )
-                })}
+                {
+                    Stores.Punches.current_punch ?
+                        <PunchDisplay punch={Stores.Punches.current_punch} active={true} />
+                        : null
+                }
+                {Stores.Punches.this_week.map(punch => <PunchDisplay punch={punch} active={false} />)}
             </div>
             <h2>{`Previous Weeks`}</h2>
             {
-                Stores.Punches.previous_weeks.map(week =>
+                Stores.Punches.last_four_weeks.map(week =>
                     <div className="week">
                         <div className="label">{week.label}</div>
                         <div className="length">
