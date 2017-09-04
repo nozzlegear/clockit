@@ -177,8 +177,9 @@ export const HomePage = observer((props: React.Props<any>) => {
     if (Stores.Punches.loading) {
         return (
             <PageWrapper ref={r => runFirstMount()}>
-                <TimeDisplay time="..." since={since} />
-                <Spinner label={`Loading previous punches, please wait.`} />
+                <TimeDisplay time="..." since={since}>
+                    <Spinner label={`Loading previous punches, please wait.`} />
+                </TimeDisplay>
             </PageWrapper>
         )
     }
