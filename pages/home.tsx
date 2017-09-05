@@ -219,7 +219,7 @@ export const HomePage = observer((props: React.Props<any>) => {
                 <h4>{`Previous Weeks`}</h4>
                 {
                     Stores.Punches.last_four_weeks.map(week =>
-                        <div className="week">
+                        <div key={week.label} className="week">
                             <div className="length">
                                 {formatTimeDuration(week.punches.reduce((total, punch) => (punch.end_date || now) - punch.start_date, 0))}
                             </div>
