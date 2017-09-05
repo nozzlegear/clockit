@@ -1,0 +1,91 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#home {
+    .time-display {
+        fontWeight = 300;
+
+        background: #08466f;
+        background-repeat: repeat;
+        background-size: auto;
+        background-position: 0% 0%;
+        color: #fff;
+        text-align: center;
+        padding: 15px 0 0 0;
+
+        &.empty {
+            padding: 15px 0;
+        }
+
+        .ms-Spinner-label {
+            color: #fff;
+        }
+
+        .app-title {
+            margin: 0;
+            font-weight: fontWeight;
+        }
+
+        .length {
+            margin: 0;
+            padding: 30px 0 60px;
+            font-size: 35px;
+        }
+
+        .since {
+            display: block;
+            font-weight: fontWeight;
+            font-size: 15px;
+        }
+
+        .actions {
+            background-color: rgba(0,0,0,.2);
+            padding: 15px 0;
+        }
+    }
+
+    .punches, .previous-weeks {
+        padding = 15px;
+        fadedColor = #777;
+
+        h4 {
+            padding: 15px;
+            text-align: center;
+            margin: 0;
+            color: #333;
+        }
+
+        .more {
+            padding: 15px;
+            text-align: center;
+        }
+
+        .punch, .week {
+            border-bottom: 1px solid #ccc;
+            color: fadedColor;
+            display: flex;
+            justify-content: space-between
+            align-items: center;
+            padding: padding
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            &.active {
+                color: #333;
+                box-shadow: 1px 1px 8px #ccc;
+            }
+
+            .date {
+                text-align: right;
+
+                .start-and-end {
+                    color: fadedColor;
+                }
+            }
+        }
+    }
+}
