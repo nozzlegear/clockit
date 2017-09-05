@@ -1,6 +1,8 @@
 {
     "name": "Clockit",
     "display": "standalone",
+    "start_url": "/",
+    "theme_color": "#08466F",
     "icons": [
         {
             "src": "/images/android-icon-36x36.png",

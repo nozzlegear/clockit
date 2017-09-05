@@ -38,6 +38,7 @@ async function startServer(hostname: string, port: number) {
     // NOTE: We're combining with dirname + ../ because this app may be running inside Zeit's pkg where such things are necessary.
     app.use("/dist", express.static(path.join(__dirname, "..", "dist")));
     app.use("/resources", express.static(path.join(__dirname, "..", "resources")));
+    app.use("/images", express.static(path.join(__dirname, "..", "images")));
 
     // Let express trust the proxy that may be used on certain hosts (e.g. Azure and other cloud hosts). 
     // Enabling this will replace the `request.protocol` with the protocol that was requested by the end user, 
@@ -88,7 +89,11 @@ async function startServer(hostname: string, port: number) {
             throw notFound();
         }
 
-        res.sendFile(path.join(__dirname, "..", "index.html"));
+        if (/manifest\.json/i.test(req.url)) {
+            res.sendFile(path.join(__dirname, "..", "manifest.json"));
+        } else {
+            res.sendFile(path.join(__dirname, "..", "index.html"));
+        }
     })
 
     // Typescript type guard for boom errors
