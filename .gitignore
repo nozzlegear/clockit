@@ -197,3 +197,4 @@ project.lock.json
 
 # Built files
 dist/
+*.zip
