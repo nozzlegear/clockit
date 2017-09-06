@@ -79,21 +79,23 @@ export class AuthPage extends AppRouter<AuthPageProps, Partial<AuthPageState>> {
 
         return (
             <section id="auth">
-                <h2>{isLoginPage ? `Sign in` : `Create an account`}</h2>
+                <h2 className="page-title">{isLoginPage ? `Sign in` : `Create an account`}</h2>
                 {error ?
                     <MessageBar messageBarType={MessageBarType.error}>
                         {error}
                     </MessageBar> :
                     null
                 }
-                <TextField label="Username" value={username} onChanged={value => this.setState({ username: value })} />
-                <TextField label="Password" type="password" value={password} onChanged={value => this.setState({ password: value })} />
+                <div className="controls">
+                    <TextField label="Username" value={username} onChanged={value => this.setState({ username: value })} />
+                    <TextField label="Password" type="password" value={password} onChanged={value => this.setState({ password: value })} />
+                </div>
                 {loading ?
                     <Spinner label={isLoginPage ? `Signing in...` : `Creating account...`} /> :
-                    <div>
+                    <div className="actions">
                         <PrimaryButton text={isLoginPage ? `Sign in` : "Create account"} buttonType={ButtonType.normal} type="button" onClick={e => this.loginOrRegister(e)} />
                         <Label>
-                            {isLoginPage ? `Don't have an account?` : `Already have an account? `}
+                            {isLoginPage ? `Don't have an account? ` : `Already have an account? `}
                             <Link to={isLoginPage ? Paths.auth.register : Paths.auth.login}>
                                 {isLoginPage ? `Create one!` : `Sign in!`}
                             </Link>
