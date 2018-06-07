@@ -1,4 +1,5 @@
-# clockit
+# Clockit
+A simple hour tracking app built for a friend. I'm currently working on building it out to be (yet another) project management and estimation app.
 
 A [Giraffe](https://github.com/giraffe-fsharp/Giraffe) web application, which has been created via the `dotnet new giraffe` command.
 
