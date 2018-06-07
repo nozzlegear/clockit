@@ -19,3 +19,9 @@ nuget xunit
 nuget xunit.runner.visualstudio
 nuget Microsoft.AspNetCore.TestHost
 nuget Giraffe.Razor
+nuget Davenport
+nuget Fsharp.Core = 4.5.0
+nuget Newtonsoft.Json >= 11.0.0
+# Pin to 0.10.3 as there's a bug when using Paket + FSharpLu.Json 0.10.4+ and installing Davenport as a dependency that makes dotnet build throw errors:
+# https://github.com/fsprojects/Paket/issues/3139
+nuget microsoft.fsharplu.json = 0.10.3
