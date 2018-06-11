@@ -3,6 +3,7 @@ module Clockit.Routes.API.Projects
 open Microsoft.AspNetCore.Http
 open Giraffe
 open Giraffe.Core 
+open Giraffe.ResponseWriters
 
 module Database = 
     open Clockit.Models
@@ -277,7 +278,18 @@ let listProjects next ctx = task {
         Database.getProjectData()
         ||> Utils.mapProject
 
-    return! json [project] next ctx
+    return! compactJson [project] next ctx
+}
+
+let createProject next (ctx: HttpContext) = task {
+    let form = ctx.Request.Form
+    
+
+    let project = 
+        Database.getProjectData()
+        ||> Utils.mapProject 
+
+    return! compactJson project next ctx
 }
 
 let listMilestones projectId next ctx = task {
@@ -287,7 +299,7 @@ let listMilestones projectId next ctx = task {
     return! 
         match List.isEmpty milestones with 
         | true -> notFound projectId next ctx 
-        | false -> json milestones next ctx
+        | false -> compactJson milestones next ctx
 }
 
 let listTasks (_, milestoneId) next ctx = task {
@@ -297,7 +309,7 @@ let listTasks (_, milestoneId) next ctx = task {
     return! 
         match List.isEmpty tasks with 
         | true -> notFound milestoneId next ctx 
-        | false -> json tasks next ctx 
+        | false -> compactJson tasks next ctx 
 }
 
 let listSubtasks (_, _, taskId) next ctx = task {
@@ -307,7 +319,7 @@ let listSubtasks (_, _, taskId) next ctx = task {
     return! 
         match List.isEmpty subtasks with 
         | true -> notFound taskId next ctx 
-        | false -> json subtasks next ctx
+        | false -> compactJson subtasks next ctx
 } 
 
 let listComments parentType parentId next ctx = task {
@@ -317,7 +329,7 @@ let listComments parentType parentId next ctx = task {
     return! 
         match List.isEmpty comments with 
         | true -> notFound parentId next ctx 
-        | false -> json comments next ctx 
+        | false -> compactJson comments next ctx 
 }
 
 let routes: HttpHandler list = 
@@ -330,5 +342,9 @@ let routes: HttpHandler list =
             routef "/api/v1/projects/%s/milestones/%s/tasks/%s/comments" (fun (_, _, taskId) -> listComments Clockit.Models.CommentParent.Task taskId)
             routef "/api/v1/projects/%s/milestones/%s/comments" (fun (_, milestoneId) -> listComments Clockit.Models.CommentParent.Milestone milestoneId)
             routef "/api/v1/projects/%s/comments" (listComments Clockit.Models.CommentParent.Project)
+        ]
+
+        POST >=> choose [
+            route "/api/v1/projects" >=> createProject
         ]
     ]
