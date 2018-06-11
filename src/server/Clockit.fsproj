@@ -16,8 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Extensions/Async.fs" />
     <Compile Include="Extensions/Giraffe.ResponseWriters.fs" />
     <Compile Include="Models.fs" />
+    <Compile Include="Database.fs" />
     <Compile Include="Routes/API/Auth.fs" />
     <Compile Include="Routes/API/Projects.fs" />
     <Compile Include="Program.fs" />

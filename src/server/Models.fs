@@ -26,12 +26,12 @@ type ProjectType =
 type ProjectDoc = {
     id: string 
     rev: string 
-    description: string
-    ``type``: ProjectType
+    description: string option
+    projectType: ProjectType
     name: string 
     created: DateTime 
     rate: Rate
-}
+} with static member Tag = 0
 
 type MilestoneDoc = {
     id: string
@@ -40,27 +40,29 @@ type MilestoneDoc = {
     name: string
     created: DateTime
     description: string
-}
+} with static member Tag = 1
 
 type TaskDoc = {
     id: string 
     rev: string 
+    projectId: string
     milestoneId: string
     created: DateTime
     name: string
     description: string
     estimatedHours: decimal 
     completedOn: DateTime option
-}
+} with static member Tag = 2
 
 type SubtaskDoc = {
     id: string 
     rev: string 
+    projectId: string
     taskId: string
     created: DateTime 
     completedOn: DateTime option
     description: string
-}
+} with static member Tag = 3
 
 type CommentParent = 
     | Task 
@@ -70,11 +72,21 @@ type CommentParent =
 type CommentDoc = {
     id: string 
     rev: string 
+    projectId: string
     parentId: string
     created: DateTime
     parentType: CommentParent
     comment: string
-}
+} with static member Tag = 4
+
+type TimeTickDoc = {
+    id: string
+    rev: string
+    projectId: string
+    taskId: string
+    started: DateTime
+    ended: DateTime option
+} with static member Tag = 5
 
 type ClientDoc = {
     id: string 
@@ -84,14 +96,6 @@ type ClientDoc = {
     email: string
     password: string
     projects: string list
-}
-
-type TimeTickDoc = {
-    id: string
-    rev: string
-    taskId: string
-    started: DateTime
-    ended: DateTime option
 }
 
 type ProjectChild = 
